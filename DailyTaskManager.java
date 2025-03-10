@@ -1,173 +1,261 @@
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
 import java.util.Scanner;
-import java.util.Stack;
 
-// ANSI color codes
-class ANSI {
-    public static final String RESET = "\033[0m";
-    public static final String RED = "\033[31m";
-    public static final String GREEN = "\033[32m";
-    public static final String YELLOW = "\033[33m";
-    public static final String BLUE = "\033[34m";
-    public static final String PURPLE = "\033[35m";
-    public static final String CYAN = "\033[36m";
-    public static final String WHITE = "\033[37m";
-}
-
+// Class to manage daily tasks
 public class DailyTaskManager {
-    private static final Scanner scanner = new Scanner(System.in);
-    private static final String[] taskArray = {"Check email", "Attend lecture", "Exercise", "Read book", "Cook dinner"};
-    private static final Stack<String> completedTaskStack = new Stack<>(); // Stack untuk menyimpan tugas yang sudah selesai
-    private static final LinkedList<String> taskList = new LinkedList<>(); // LinkedList untuk menyimpan daftar tugas
+    // Part A: Task Array
+    private static String[] taskArray = {
+        "Check email",
+        "Attend lecture",
+        "Exercise",
+        "Read book",
+        "Cook dinner"
+    };
 
-    // Membersihkan layar konsol
+    // Part B: Task Undo Stack
+    private static Stack completedTasks = new Stack(10); // Stack with a capacity of 10
+
+    // Part C: Dynamic Task List with Linked List
+    private static LinkedList dynamicTaskList = new LinkedList();
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int choice;
+
+        do {
+            clearScreen();
+            displayCurrentTime();
+            System.out.println("\nDaily Task Manager");
+            System.out.println("1. View tasks (Array)");
+            System.out.println("2. Update task (Array)");
+            System.out.println("3. Mark task as completed (push to stack)");
+            System.out.println("4. Undo task completion (pop from stack)");
+            System.out.println("5. Add task to dynamic list");
+            System.out.println("6. Remove task from dynamic list");
+            System.out.println("7. View all tasks in dynamic list");
+            System.out.println("8. Exit");
+            System.out.print("Choose an option: ");
+            choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    viewTasks();
+                    break;
+                case 2:
+                    updateTask(scanner);
+                    break;
+                case 3:
+                    markTaskAsCompleted(scanner);
+                    break;
+                case 4:
+                    undoTaskCompletion();
+                    break;
+                case 5:
+                    addTaskToDynamicList(scanner);
+                    break;
+                case 6:
+                    removeTaskFromDynamicList(scanner);
+                    break;
+                case 7:
+                    dynamicTaskList.displayTasks();
+                    break;
+                case 8:
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
+            if (choice != 8) {
+                System.out.print("Press Enter to continue...");
+                scanner.nextLine(); // Wait for the user to press Enter
+            }
+        } while (choice != 8);
+        scanner.close(); // Close the scanner
+    }
+
+    // Method to clear the console screen
     public static void clearScreen() {
+        // ANSI escape code to clear the screen
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
 
-    // Animasi loading
-    public static void animatedLoading(String message) {
+    // Method to display the current local time
+    public static void displayCurrentTime() {
+        String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        System.out.println("Current Time: " + time);
+    }
+
+    // Part A: View all tasks in the array
+    private static void viewTasks() {
+        animatedLoading("Loading tasks...");
+        System.out.println("Tasks in the array:");
+        for (String task : taskArray) {
+            System.out.println("- " + task);
+        }
+        System.out.println("Total number of tasks: " + taskArray.length);
+    }
+
+    // Part A: Update a task in the array
+    private static void updateTask(Scanner scanner) {
+        System.out.print("Enter task index to update (0 to " + (taskArray.length - 1) + "): ");
+        int index = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        if (index >= 0 && index < taskArray.length) {
+            System.out.print("Enter new task: ");
+            String newTask = scanner.nextLine();
+            taskArray[index] = newTask;
+            System.out.println("Task updated!");
+        } else {
+            System.out.println("Invalid index!");
+        }
+    }
+
+    // Part B: Mark a task as completed
+    private static void markTaskAsCompleted(Scanner scanner) {
+        System.out.print("Enter task to mark as completed: ");
+        String task = scanner.nextLine();
+        completedTasks.push(task);
+        System.out.println("Task marked as completed and pushed to stack: " + task);
+    }
+
+    // Part B: Undo task completion
+    private static void undoTaskCompletion() {
+        String task = completedTasks.pop();
+        if (task != null) {
+            System.out.println("Task undone: " + task);
+        }
+    }
+
+    // Part C: Add a task to the dynamic linked list
+    private static void addTaskToDynamicList(Scanner scanner) {
+        System.out.print("Enter new task to add to dynamic list: ");
+        String newTask = scanner.nextLine();
+        dynamicTaskList.add(newTask);
+        System.out.println("Task added to dynamic list: " + newTask);
+    }
+
+    // Part C: Remove a task from the dynamic linked list
+    private static void removeTaskFromDynamicList(Scanner scanner) {
+        System.out.print("Enter task to remove from dynamic list: ");
+        String taskToRemove = scanner.nextLine();
+        if (dynamicTaskList.remove(taskToRemove)) {
+            System.out.println("Task removed from dynamic list: " + taskToRemove);
+        } else {
+            System.out.println("Task not found in dynamic list!");
+        }
+    }
+
+    // Method for animated loading
+    private static void animatedLoading(String message) {
         String[] dots = {".  ", ".. ", "..."};
         for (int i = 0; i < 3; i++) {
-            System.out.print("\r" + ANSI.YELLOW + message + dots[i] + ANSI.RESET);
+            System.out.print("\r" + message + dots[i]);
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        System.out.println("\r" + ANSI.GREEN + message + " Done!   " + ANSI.RESET);
+        System.out.println("\r" + message + " Done!");
+    }
+}
+
+// Part B: Stack implementation for undo functionality
+class Stack {
+    private String[] stack;
+    private int top;
+    private int capacity;
+
+    public Stack(int size) {
+        stack = new String[size];
+        capacity = size;
+        top = -1;
     }
 
-    // Menampilkan tugas dari array
-    public static void viewTasks() {
-        animatedLoading("Loading tasks");
-        for (String task : taskArray) {
-            System.out.println(ANSI.CYAN + "- " + task + ANSI.RESET);
+    public void push(String task) {
+        if (top == capacity - 1) {
+            System.out.println("Stack overflow! Cannot push task: " + task);
+            return;
         }
-        System.out.println(ANSI.YELLOW + "\nPress Enter to continue..." + ANSI.RESET);
-        scanner.nextLine();
+        stack[++top] = task;
     }
 
-    // Memperbarui tugas di array
-    public static void updateTask() {
-        System.out.println(ANSI.PURPLE + "\n--- Update Task ---" + ANSI.RESET);
-        for (int i = 0; i < taskArray.length; i++) {
-            System.out.println((i + 1) + ". " + taskArray[i]);
+    public String pop() {
+        if (top == -1) {
+            System.out.println("Stack underflow! No tasks to pop.");
+            return null;
         }
-        System.out.print(ANSI.YELLOW + "Enter task number to update: " + ANSI.RESET);
-        int index = scanner.nextInt() - 1;
-        scanner.nextLine(); // Membersihkan newline
-        if (index >= 0 && index < taskArray.length) {
-            System.out.print(ANSI.CYAN + "Enter new task: " + ANSI.RESET);
-            taskArray[index] = scanner.nextLine();
-            System.out.println(ANSI.GREEN + "Task updated!" + ANSI.RESET);
+        return stack[top--];
+    }
+
+    public String peek() {
+        if (top == -1) {
+            System.out.println("Stack is empty!");
+            return null;
+        }
+        return stack[top];
+    }
+}
+
+// Part C: Linked List implementation for dynamic task management
+class LinkedList {
+    private Node head;
+
+    private class Node {
+        String data;
+        Node next;
+
+        Node(String data) {
+            this.data = data;
+            this.next = null;
+        }
+    }
+
+    public void add(String task) {
+        Node newNode = new Node(task);
+        if (head == null) {
+            head = newNode;
         } else {
-            System.out.println(ANSI.RED + "Invalid index!" + ANSI.RESET);
-        }
-    }
-
-    // Menyelesaikan tugas dan memindahkannya ke stack
-    public static void completeTask() {
-        System.out.println(ANSI.PURPLE + "\n--- Complete Task ---" + ANSI.RESET);
-        if (taskList.isEmpty()) {
-            System.out.println(ANSI.RED + "No tasks available to complete!" + ANSI.RESET);
-            return;
-        }
-        String completedTask = taskList.removeFirst(); // Menghapus tugas pertama dari LinkedList
-        completedTaskStack.push(completedTask); // Menambahkan tugas yang selesai ke stack
-        System.out.println(ANSI.GREEN + "Task completed and added to undo stack: " + completedTask + ANSI.RESET);
-    }
-
-    // Membatalkan penyelesaian tugas terakhir
-    public static void undoTask() {
-        System.out.println(ANSI.PURPLE + "\n--- Undo Last Completed Task ---" + ANSI.RESET);
-        if (completedTaskStack.isEmpty()) {
-            System.out.println(ANSI.RED + "No tasks to undo!" + ANSI.RESET);
-            return;
-        }
-        String undoneTask = completedTaskStack.pop(); // Mengambil tugas terakhir dari stack
-        taskList.addFirst(undoneTask); // Mengembalikan tugas ke LinkedList
-        System.out.println(ANSI.YELLOW + "Task restored: " + undoneTask + ANSI.RESET);
-    }
-
-    // Menambahkan tugas baru ke LinkedList
-    public static void addTask() {
-        System.out.print(ANSI.CYAN + "Enter new task: " + ANSI.RESET);
-        String newTask = scanner.nextLine();
-        taskList.add(newTask); // Menambahkan tugas ke LinkedList
-        System.out.println(ANSI.GREEN + "Task added!" + ANSI.RESET);
-    }
-
-    // Menghapus tugas dari LinkedList
-    public static void removeTask() {
-        System.out.print(ANSI.CYAN + "Enter task to remove: " + ANSI.RESET);
-        String taskToRemove = scanner.nextLine();
-        if (taskList.remove(taskToRemove)) {
-            System.out.println(ANSI.GREEN + "Task removed!" + ANSI.RESET);
-        } else {
-            System.out.println(ANSI.RED + "Task not found!" + ANSI.RESET);
-        }
-    }
-
-    // Menampilkan tugas dari LinkedList
-    public static void viewLinkedListTasks() {
-        System.out.println(ANSI.PURPLE + "\n--- Linked List Tasks ---" + ANSI.RESET);
-        if (taskList.isEmpty()) {
-            System.out.println(ANSI.RED + "No tasks available!" + ANSI.RESET);
-            return;
-        }
-        for (String task : taskList) {
-            System.out.println(ANSI.CYAN + "- " + task + ANSI.RESET);
-        }
-    }
-
-    // Menu utama
-    public static void main(String[] args) {
-        while (true) {
-            clearScreen();
-            String time = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            System.out.println(ANSI.PURPLE + "\n--- Daily Task Manager --- " + ANSI.YELLOW + time + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "1. View tasks (Array)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "2. Update task (Array)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "3. Complete task (Stack)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "4. Undo last completed task (Stack)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "5. Add task (Linked List)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "6. Remove task (Linked List)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "7. View tasks (Linked List)" + ANSI.RESET);
-            System.out.println(ANSI.BLUE + "8. Exit" + ANSI.RESET);
-            System.out.print(ANSI.YELLOW + "Choose an option: " + ANSI.RESET);
-
-            if (!scanner.hasNextInt()) {
-                System.out.println(ANSI.RED + "Invalid input. Please enter a number." + ANSI.RESET);
-                scanner.next(); // Membersihkan input yang tidak valid
-                continue;
+            Node current = head;
+            while (current.next != null) {
+                current = current.next;
             }
+            current.next = newNode;
+        }
+    }
 
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Membersihkan newline
-
-            switch (choice) {
-                case 1 -> viewTasks();
-                case 2 -> updateTask();
-                case 3 -> completeTask();
-                case 4 -> undoTask();
-                case 5 -> addTask();
-                case 6 -> removeTask();
-                case 7 -> viewLinkedListTasks();
-                case 8 -> {
-                    System.out.println(ANSI.RED + "Exiting..." + ANSI.RESET);
-                    return;
-                }
-                default -> System.out.println(ANSI.RED + "Invalid choice! Please select a valid option." + ANSI.RESET);
+    public boolean remove(String task) {
+        if (head == null) {
+            return false;
+        }
+        if (head.data.equals(task)) {
+            head = head.next;
+            return true;
+        }
+        Node current = head;
+        while (current.next != null) {
+            if (current.next.data.equals(task)) {
+                current.next = current.next.next;
+                return true;
             }
+            current = current.next;
+        }
+        return false;
+    }
 
-            // Jeda sebelum kembali ke menu
-            System.out.println(ANSI.YELLOW + "\nPress Enter to continue..." + ANSI.RESET);
-            scanner.nextLine();
+    public void displayTasks() {
+        if (head == null) {
+            System.out.println("No tasks available in the dynamic list!");
+            return;
+        }
+        System.out.println("Tasks in the dynamic list:");
+        Node current = head;
+        while (current != null) {
+            System.out.println("- " + current.data);
+            current = current.next;
         }
     }
 }
